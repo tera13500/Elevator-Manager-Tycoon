@@ -233,6 +233,8 @@ sim.elevators.forEach((e) => {
   const bubble = document.createElement('div');
   bubble.className = 'bubble';
   bubble.textContent = '💬';
+  const beacon = document.createElement('div');
+  beacon.className = 'beacon';
   const cleaner = document.createElement('div');
   cleaner.className = 'cleaner';
   const queue = document.createElement('div');
@@ -240,14 +242,14 @@ sim.elevators.forEach((e) => {
   const car = document.createElement('div');
   car.className = 'car';
 
-  shaft.append(floorLines, label, bubble, cleaner, queue, car);
+  shaft.append(floorLines, label, bubble, beacon, cleaner, queue, car);
   shaft.addEventListener('click', () => {
     selectedId = e.id;
     render();
   });
 
   building.appendChild(shaft);
-  elevatorEls.set(e.id, { shaft, bubble, queue, car });
+  elevatorEls.set(e.id, { shaft, bubble, beacon, queue, car });
 });
 
 function gaugeClassByValue(v) {
@@ -337,12 +339,18 @@ function render() {
     ui.car.style.bottom = `${20 + elv.floorPosition * 230}px`;
     ui.queue.style.height = `${Math.max(8, elv.congestion)}px`;
     ui.bubble.style.opacity = elv.complaints > 0 ? '1' : '0.25';
+    const warningOn = elv.warning.length > 0;
+    ui.shaft.classList.toggle('warning-active', warningOn);
+    ui.beacon.classList.toggle('danger', elv.failureRisk >= 60);
+    ui.beacon.classList.toggle('warn', elv.failureRisk >= 40 && elv.failureRisk < 60);
+    ui.beacon.classList.toggle('safe', elv.failureRisk < 40);
     ui.shaft.classList.toggle('selected', selectedId === elv.id);
   });
 
   if (s.eventPopup) {
     popup.textContent = s.eventPopup;
     popup.classList.remove('hidden');
+    popup.classList.toggle('danger', s.eventPopup.includes('⚠️'));
     if (popupTimerId) clearTimeout(popupTimerId);
     popupTimerId = setTimeout(() => {
       sim.clearPopup();
